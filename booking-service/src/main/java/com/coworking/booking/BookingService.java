@@ -11,6 +11,7 @@ import com.coworking.booking.entity.Booking;
 import com.coworking.booking.entity.BookingStatus;
 import com.coworking.booking.mapper.BookingMapper;
 import com.coworking.booking.repository.BookingRepository;
+import com.coworking.booking.port.WorkspaceLookupPort;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,18 +28,18 @@ import java.util.List;
 public class BookingService {
 
     private final BookingRepository bookingRepository;
-    private final WorkspaceClient workspaceClient;
+    private final WorkspaceLookupPort workspaceLookup;
     private final BookingMapper bookingMapper;
     private final BookingSideEffectService bookingSideEffectService;
 
     public BookingService(
             BookingRepository bookingRepository,
-            WorkspaceClient workspaceClient,
+            WorkspaceLookupPort workspaceLookup,
             BookingMapper bookingMapper,
             BookingSideEffectService bookingSideEffectService
     ) {
         this.bookingRepository = bookingRepository;
-        this.workspaceClient = workspaceClient;
+        this.workspaceLookup = workspaceLookup;
         this.bookingMapper = bookingMapper;
         this.bookingSideEffectService = bookingSideEffectService;
     }
@@ -96,7 +97,7 @@ public class BookingService {
 
     private void applyBusinessFields(Booking booking, BookingDto dto) {
         validatePeriod(booking);
-        WorkspaceDto workspace = workspaceClient.findById(dto.getWorkspaceId());
+        WorkspaceDto workspace = workspaceLookup.findById(dto.getWorkspaceId());
         if (!workspace.isActive()) {
             throw new IllegalArgumentException("Workspace " + workspace.getId() + " is inactive");
         }

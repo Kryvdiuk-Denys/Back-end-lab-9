@@ -1,6 +1,8 @@
 package com.coworking.booking.controller;
 
 import com.coworking.booking.ResourceNotFoundException;
+import com.coworking.booking.WorkspaceNotFoundException;
+import com.coworking.booking.WorkspaceServiceUnavailableException;
 import com.coworking.booking.async.AsyncProcessingUnavailableException;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,16 @@ public class ApiExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> notFound(ResourceNotFoundException ex) {
         return error(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(WorkspaceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> workspaceNotFound(WorkspaceNotFoundException ex) {
+        return error(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(WorkspaceServiceUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> workspaceUnavailable(WorkspaceServiceUnavailableException ex) {
+        return error(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
     }
 
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class, MethodArgumentNotValidException.class})

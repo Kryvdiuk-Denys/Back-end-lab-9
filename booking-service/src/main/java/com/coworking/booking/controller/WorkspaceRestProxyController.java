@@ -1,7 +1,9 @@
 package com.coworking.booking.controller;
 
-import com.coworking.booking.WorkspaceClient;
 import com.coworking.booking.WorkspaceUsageGuard;
+import com.coworking.booking.port.WorkspaceCatalogPort;
+import com.coworking.booking.port.WorkspaceLookupPort;
+import com.coworking.booking.port.WorkspaceManagementPort;
 import com.coworking.common.dto.WorkspaceDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,39 +23,48 @@ import java.util.List;
 @RequestMapping("/api/workspaces")
 public class WorkspaceRestProxyController {
 
-    private final WorkspaceClient workspaceClient;
+    private final WorkspaceLookupPort workspaceLookup;
+    private final WorkspaceCatalogPort workspaceCatalog;
+    private final WorkspaceManagementPort workspaceManagement;
     private final WorkspaceUsageGuard workspaceUsageGuard;
 
-    public WorkspaceRestProxyController(WorkspaceClient workspaceClient, WorkspaceUsageGuard workspaceUsageGuard) {
-        this.workspaceClient = workspaceClient;
+    public WorkspaceRestProxyController(
+            WorkspaceLookupPort workspaceLookup,
+            WorkspaceCatalogPort workspaceCatalog,
+            WorkspaceManagementPort workspaceManagement,
+            WorkspaceUsageGuard workspaceUsageGuard
+    ) {
+        this.workspaceLookup = workspaceLookup;
+        this.workspaceCatalog = workspaceCatalog;
+        this.workspaceManagement = workspaceManagement;
         this.workspaceUsageGuard = workspaceUsageGuard;
     }
 
     @GetMapping
     public List<WorkspaceDto> findAll() {
-        return workspaceClient.findAll();
+        return workspaceCatalog.findAll();
     }
 
     @GetMapping("/{id}")
     public WorkspaceDto findById(@PathVariable Long id) {
-        return workspaceClient.findById(id);
+        return workspaceLookup.findById(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public WorkspaceDto create(@Valid @RequestBody WorkspaceDto dto) {
-        return workspaceClient.create(dto);
+        return workspaceManagement.create(dto);
     }
 
     @PutMapping("/{id}")
     public WorkspaceDto update(@PathVariable Long id, @Valid @RequestBody WorkspaceDto dto) {
-        return workspaceClient.update(id, dto);
+        return workspaceManagement.update(id, dto);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         workspaceUsageGuard.ensureWorkspaceCanBeDeleted(id);
-        workspaceClient.delete(id);
+        workspaceManagement.delete(id);
     }
 }

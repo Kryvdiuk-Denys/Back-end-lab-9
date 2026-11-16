@@ -1,6 +1,6 @@
 # Coworking Microservices
 
-Java 17 and Spring Boot 3.3 application split into independent Maven modules. `workspace-service` owns workspace data, `booking-service` owns booking data, and `common` contains the shared `WorkspaceDto` API contract. Booking calls the workspace REST API; there are no Maven dependencies between the services.
+Java 17 and Spring Boot 3.3 application split into independent Maven modules. `workspace-service` owns workspace data, `booking-service` owns booking data, and `common` contains the shared DTO and gRPC contracts. Booking calls workspace through a configurable HTTP or gRPC client; the services depend only on `common`.
 
 ## Stack
 
@@ -24,6 +24,17 @@ From the project directory, build and verify the Maven reactor:
 
 ```bat
 mvn verify
+```
+
+On Windows, if this project is in a directory with non-ASCII characters and `protoc` reports that the `.proto` file does not exist, run Maven from an unused temporary drive alias so the native compiler receives an ASCII path:
+
+```powershell
+$projectDirectory = (Get-Location).Path
+subst R: $projectDirectory
+Set-Location R:\
+mvn verify
+Set-Location $projectDirectory
+subst R: /d
 ```
 
 Start the full stack with Docker Compose (Maven is not required on the host):
@@ -128,6 +139,21 @@ For the event demo, send an authenticated `POST /api/workspaces` directly to `ht
 
 The consumer inserts events with `ON CONFLICT (event_id) DO NOTHING`; redelivery therefore leaves one stored row. A unit test covers repeated processing of the same event.
 
+## Interservice communication (Lab 9)
+
+`booking-service` reads workspace data through the `WorkspaceLookupPort`. Set `WORKSPACE_CLIENT_TYPE` to `http` (default) or `grpc` to select its adapter. The HTTP adapter is a declarative Spring HTTP interface, with connection and read timeouts configured by `WORKSPACE_HTTP_CONNECT_TIMEOUT` and `WORKSPACE_HTTP_READ_TIMEOUT`. The gRPC adapter calls `WorkspaceLookupService/GetWorkspace` and applies `WORKSPACE_GRPC_DEADLINE` to every call.
+
+The `common` module contains `src/main/proto/workspace_interservice.proto`; Maven generates the Java message and service classes during the build. `workspace-service` hosts that gRPC service when `WORKSPACE_GRPC_SERVER_ENABLED=true`; its port is `WORKSPACE_GRPC_SERVER_PORT` (default `9090`). The server is disabled by default. For a local run, use `localhost:9090`; Docker Compose points booking to `workspace-service:9090` by default. The REST URL remains configurable with `WORKSPACE_SERVICE_URL`.
+
+To run the demo over gRPC in Docker Compose, set these variables in the shell or `.env`, then rebuild and start the stack:
+
+```text
+WORKSPACE_CLIENT_TYPE=grpc
+WORKSPACE_GRPC_SERVER_ENABLED=true
+```
+
+The same `WorkspaceLookupPort` handles either transport. Missing workspaces become HTTP 404 responses; timeouts, connection failures, and other upstream errors become HTTP 503 responses. The other workspace operations use the declarative HTTP adapter through `WorkspaceCatalogPort` and `WorkspaceManagementPort`.
+
 Manual token request example:
 
 ```bash
@@ -158,7 +184,15 @@ Authorization: Bearer <token>
 | AC6 | `/api/admin/**` and `/admin/**` require `ADMIN` in `SecurityFilterChain`; non-admin receives 403. |
 | AC7 | Service delete/update methods use `@PreAuthorize`; non-admin delete is blocked by method security. |
 | AC8 | `http/coworking-booking.http` contains ready demonstration requests. |
+| AC9 | Booking uses the declarative `WorkspaceHttpApi` over `RestClient` with configured connect and read timeouts. |
+| AC10 | Workspace lookup, catalog, and management ports keep controllers and services independent from clients. |
+| AC11 | `common/src/main/proto/workspace_interservice.proto` generates the shared protobuf and gRPC contract at build time. |
+| AC12 | `workspace-service` starts its token-protected gRPC server only when enabled and stops it with the application. |
+| AC13 | Booking's gRPC adapter uses a configured target and per-call deadline through the same lookup port as HTTP. |
+| AC14 | `WORKSPACE_CLIENT_TYPE` selects HTTP or gRPC; unsupported values fail startup. |
+| AC15 | REST and gRPC addresses have local defaults and Compose overrides. |
+| AC16 | Both adapters translate not-found and upstream failures into domain exceptions; the API returns 404 or 503. |
 
 ## Multi-module lab
 
-The root `pom.xml` has `pom` packaging and aggregates `common`, `workspace-service`, and `booking-service`. Shared test dependency management is declared in the root POM. The service modules both depend on the DTO-only `common` module, while booking communicates with workspace over HTTP. Run `mvn verify` from this directory to build and verify the full reactor.
+The root `pom.xml` has `pom` packaging and aggregates `common`, `workspace-service`, and `booking-service`. Shared test dependency management is declared in the root POM. Both services depend on `common` for DTOs and the generated gRPC contract. Run `mvn verify` from this directory to build and verify the full reactor.

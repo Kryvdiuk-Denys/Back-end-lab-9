@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package coworking.workspace.v1;
+
+option java_package = "com.coworking.common.grpc.workspace.v1";
+option java_multiple_files = true;
+option java_outer_classname = "WorkspaceInterserviceProto";
+
+service WorkspaceLookupService {
+  rpc GetWorkspace(GetWorkspaceRequest) returns (WorkspaceResponse);
+}
+
+message GetWorkspaceRequest {
+  int64 id = 1;
+}
+
+message WorkspaceResponse {
+  int64 id = 1;
+  string code = 2;
+  string name = 3;
+  string type = 4;
+  int32 capacity = 5;
+  string hourly_rate = 6;
+  bool active = 7;
+}

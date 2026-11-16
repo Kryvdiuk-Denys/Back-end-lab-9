@@ -57,17 +57,6 @@ spring:
 
   security:
     oauth2:
-      client:
-        registration:
-          keycloak:
-            client-id: coworking-ui
-            client-secret: ui-secret
-            authorization-grant-type: authorization_code
-            scope: openid, profile, email
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-        provider:
-          keycloak:
-            issuer-uri: http://localhost:8081/realms/coworking
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8081/realms/coworking}
@@ -79,7 +68,14 @@ server:
 services:
   workspace:
     base-url: ${WORKSPACE_SERVICE_URL:http://localhost:8082}
+    client-type: ${WORKSPACE_CLIENT_TYPE:http}
     service-token: ${WORKSPACE_SERVICE_TOKEN:local-workspace-token}
+    http:
+      connect-timeout: ${WORKSPACE_HTTP_CONNECT_TIMEOUT:2s}
+      read-timeout: ${WORKSPACE_HTTP_READ_TIMEOUT:3s}
+    grpc:
+      target: ${WORKSPACE_GRPC_TARGET:localhost:9090}
+      deadline: ${WORKSPACE_GRPC_DEADLINE:2s}
 
 booking:
   async:

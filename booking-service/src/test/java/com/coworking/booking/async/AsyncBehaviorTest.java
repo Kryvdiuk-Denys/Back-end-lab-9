@@ -3,7 +3,7 @@ package com.coworking.booking.async;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.coworking.booking.WorkspaceClient;
+import com.coworking.booking.port.WorkspaceLookupPort;
 import com.coworking.common.dto.WorkspaceDto;
 import com.coworking.booking.config.AsyncConfiguration;
 import com.coworking.booking.controller.ApiExceptionHandler;
@@ -67,7 +67,7 @@ class AsyncBehaviorTest {
     private BookingSideEffectService bookingSideEffectService;
 
     @org.springframework.beans.factory.annotation.Autowired
-    private WorkspaceClient workspaceClient;
+    private WorkspaceLookupPort workspaceClient;
 
     private CountDownLatch releaseBlockedTasks;
 
@@ -230,8 +230,8 @@ class AsyncBehaviorTest {
     static class TestBeans {
 
         @Bean
-        WorkspaceClient workspaceClient() {
-            return mock(WorkspaceClient.class);
+        WorkspaceLookupPort workspaceClient() {
+            return mock(WorkspaceLookupPort.class);
         }
 
         @Bean(name = "rejectingExecutor")

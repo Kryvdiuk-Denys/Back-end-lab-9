@@ -39,3 +39,9 @@ server:
 
 security:
   internal-service-token: ${WORKSPACE_SERVICE_TOKEN:local-workspace-token}
+
+workspace:
+  grpc:
+    server:
+      enabled: ${WORKSPACE_GRPC_SERVER_ENABLED:false}
+      port: ${WORKSPACE_GRPC_SERVER_PORT:9090}

@@ -61,6 +61,7 @@ services:
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HOSTNAME: http://localhost:8081
     ports:
       - "8081:8080"
     volumes:
@@ -81,6 +82,8 @@ services:
       WORKSPACE_DB_USERNAME: coworking
       WORKSPACE_DB_PASSWORD: coworking
       WORKSPACE_SERVICE_TOKEN: ${WORKSPACE_SERVICE_TOKEN:-local-workspace-token}
+      WORKSPACE_GRPC_SERVER_ENABLED: ${WORKSPACE_GRPC_SERVER_ENABLED:-false}
+      WORKSPACE_GRPC_SERVER_PORT: ${WORKSPACE_GRPC_SERVER_PORT:-9090}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-coworking}
@@ -89,6 +92,7 @@ services:
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/coworking/protocol/openid-connect/certs
     ports:
       - "8082:8082"
+      - "9090:9090"
     depends_on:
       workspace-db:
         condition: service_healthy
@@ -110,12 +114,21 @@ services:
       BOOKING_DB_PASSWORD: coworking
       WORKSPACE_SERVICE_URL: http://workspace-service:8082
       WORKSPACE_SERVICE_TOKEN: ${WORKSPACE_SERVICE_TOKEN:-local-workspace-token}
+      WORKSPACE_CLIENT_TYPE: ${WORKSPACE_CLIENT_TYPE:-http}
+      WORKSPACE_GRPC_TARGET: ${WORKSPACE_GRPC_TARGET:-workspace-service:9090}
+      WORKSPACE_GRPC_DEADLINE: ${WORKSPACE_GRPC_DEADLINE:-2s}
+      WORKSPACE_HTTP_CONNECT_TIMEOUT: ${WORKSPACE_HTTP_CONNECT_TIMEOUT:-2s}
+      WORKSPACE_HTTP_READ_TIMEOUT: ${WORKSPACE_HTTP_READ_TIMEOUT:-3s}
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-coworking}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-coworking}
       KEYCLOAK_ISSUER_URI: http://localhost:8081/realms/coworking
       KEYCLOAK_JWK_SET_URI: http://keycloak:8080/realms/coworking/protocol/openid-connect/certs
+      KEYCLOAK_AUTHORIZATION_URI: http://localhost:8081/realms/coworking/protocol/openid-connect/auth
+      KEYCLOAK_TOKEN_URI: http://keycloak:8080/realms/coworking/protocol/openid-connect/token
+      KEYCLOAK_USER_INFO_URI: http://keycloak:8080/realms/coworking/protocol/openid-connect/userinfo
+      KEYCLOAK_LOGOUT_URI: http://localhost:8081/realms/coworking/protocol/openid-connect/logout
     ports:
       - "8080:8080"
     depends_on:

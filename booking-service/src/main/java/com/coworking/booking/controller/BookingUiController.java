@@ -3,7 +3,7 @@ package com.coworking.booking.controller;
 import com.coworking.booking.dto.BookingDto;
 import com.coworking.booking.entity.BookingStatus;
 import com.coworking.booking.BookingService;
-import com.coworking.booking.WorkspaceClient;
+import com.coworking.booking.port.WorkspaceCatalogPort;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,11 +21,11 @@ import java.time.LocalDateTime;
 public class BookingUiController {
 
     private final BookingService bookingService;
-    private final WorkspaceClient workspaceClient;
+    private final WorkspaceCatalogPort workspaceCatalog;
 
-    public BookingUiController(BookingService bookingService, WorkspaceClient workspaceClient) {
+    public BookingUiController(BookingService bookingService, WorkspaceCatalogPort workspaceCatalog) {
         this.bookingService = bookingService;
-        this.workspaceClient = workspaceClient;
+        this.workspaceCatalog = workspaceCatalog;
     }
 
     @GetMapping
@@ -45,7 +45,7 @@ public class BookingUiController {
         booking.setStartsAt(startsAt);
         booking.setEndsAt(startsAt.plusHours(2));
         booking.setStatus(BookingStatus.CONFIRMED);
-        workspaceClient.findAll().stream()
+        workspaceCatalog.findAll().stream()
                 .findFirst()
                 .ifPresent(workspace -> booking.setWorkspaceId(workspace.getId()));
 
@@ -109,7 +109,7 @@ public class BookingUiController {
     }
 
     private void prepareForm(Model model, String action, String title) {
-        model.addAttribute("workspaces", workspaceClient.findAll());
+        model.addAttribute("workspaces", workspaceCatalog.findAll());
         model.addAttribute("statuses", BookingStatus.values());
         model.addAttribute("action", action);
         model.addAttribute("title", title);

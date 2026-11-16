@@ -2,7 +2,7 @@ package com.coworking.booking.service;
 
 import com.coworking.booking.BookingService;
 import com.coworking.booking.ResourceNotFoundException;
-import com.coworking.booking.WorkspaceClient;
+import com.coworking.booking.port.WorkspaceLookupPort;
 import com.coworking.booking.async.AsyncProcessingUnavailableException;
 import com.coworking.booking.async.BookingSideEffectService;
 import com.coworking.booking.dto.BookingDto;
@@ -45,7 +45,7 @@ class BookingServiceTest {
     private BookingRepository bookingRepository;
 
     @Mock
-    private WorkspaceClient workspaceClient;
+    private WorkspaceLookupPort workspaceClient;
 
     @Mock
     private BookingMapper bookingMapper;

@@ -1,6 +1,6 @@
 package com.coworking.booking.async;
 
-import com.coworking.booking.WorkspaceClient;
+import com.coworking.booking.port.WorkspaceLookupPort;
 import com.coworking.common.dto.WorkspaceDto;
 import com.coworking.booking.dto.BookingPreparationRequest;
 import com.coworking.booking.dto.BookingPreparationResult;
@@ -20,16 +20,16 @@ import java.util.concurrent.TimeoutException;
 @Service
 public class BookingPreparationService {
 
-    private final WorkspaceClient workspaceClient;
+    private final WorkspaceLookupPort workspaceLookup;
     private final BookingAsyncLookupService lookupService;
     private final long waitTimeoutMillis;
 
     public BookingPreparationService(
-            WorkspaceClient workspaceClient,
+            WorkspaceLookupPort workspaceLookup,
             BookingAsyncLookupService lookupService,
             @Value("${booking.async.preparation-timeout-ms:2500}") long waitTimeoutMillis
     ) {
-        this.workspaceClient = workspaceClient;
+        this.workspaceLookup = workspaceLookup;
         this.lookupService = lookupService;
         this.waitTimeoutMillis = waitTimeoutMillis;
     }
@@ -37,7 +37,7 @@ public class BookingPreparationService {
     @Transactional(readOnly = true)
     public CompletableFuture<BookingPreparationResult> prepareAsync(BookingPreparationRequest request) {
         validate(request);
-        WorkspaceDto workspace = workspaceClient.findById(request.workspaceId());
+        WorkspaceDto workspace = workspaceLookup.findById(request.workspaceId());
         long durationMinutes = Duration.between(request.startsAt(), request.endsAt()).toMinutes();
 
         CompletableFuture<Boolean> availability = lookupService.checkAvailability(request.workspaceId());
